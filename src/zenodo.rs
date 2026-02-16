@@ -17,6 +17,9 @@ pub struct DepositionResponse {
     pub id: u64,
     pub links: DepositionLinks,
     pub metadata: Option<serde_json::Value>,
+    pub doi: Option<String>,
+    pub conceptrecid: Option<String>,
+    pub doi_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

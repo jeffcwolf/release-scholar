@@ -2,11 +2,54 @@ use crate::metadata::citation::CitationCff;
 use crate::metadata::zenodo::ZenodoDeposit;
 use crate::zenodo::ZenodoClient;
 use colored::Colorize;
+use std::io::{self, Write};
 use std::path::Path;
 
 pub fn run(project_dir: &Path, sandbox: bool, confirm: bool) -> Result<(), String> {
     let project_dir = std::fs::canonicalize(project_dir)
         .map_err(|e| format!("Invalid project directory: {}", e))?;
+
+    // Safety prompt for production
+    if !sandbox && !confirm {
+        println!(
+            "\n  {} You are about to create a draft on {}.",
+            "WARNING".yellow().bold(),
+            "PRODUCTION Zenodo".red().bold()
+        );
+        println!("  This will reserve a real DOI.\n");
+        print!("  Continue? [y/N] ");
+        io::stdout().flush().ok();
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .map_err(|e| format!("Cannot read input: {}", e))?;
+        if !input.trim().eq_ignore_ascii_case("y") {
+            println!("  Aborted.");
+            return Ok(());
+        }
+        println!();
+    }
+
+    if !sandbox && confirm {
+        println!(
+            "\n  {} You are about to {} on {}.",
+            "WARNING".red().bold(),
+            "PERMANENTLY PUBLISH".red().bold(),
+            "PRODUCTION Zenodo".red().bold()
+        );
+        println!("  This is irreversible and will mint a real DOI.\n");
+        print!("  Type 'publish' to confirm: ");
+        io::stdout().flush().ok();
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .map_err(|e| format!("Cannot read input: {}", e))?;
+        if input.trim() != "publish" {
+            println!("  Aborted.");
+            return Ok(());
+        }
+        println!();
+    }
 
     // Determine version from git tag
     let version = get_version(&project_dir)?;
@@ -41,7 +84,7 @@ pub fn run(project_dir: &Path, sandbox: bool, confirm: bool) -> Result<(), Strin
         "PRODUCTION".red().bold()
     };
     println!(
-        "\n{} Publishing {} to Zenodo [{}]...\n",
+        "{} Publishing {} to Zenodo [{}]...\n",
         ">>>".bold(),
         tag.bold(),
         env_label
@@ -84,13 +127,26 @@ pub fn run(project_dir: &Path, sandbox: bool, confirm: bool) -> Result<(), Strin
 
     if confirm {
         print!("  Publishing... ");
-        client.publish(deposition_id)?;
+        let published = client.publish(deposition_id)?;
         println!("{}", "done".green());
+
+        let doi = published.doi.as_deref().unwrap_or("pending");
+        let default_doi_url = format!("https://doi.org/{}", doi);
+        let doi_url = published
+            .doi_url
+            .as_deref()
+            .unwrap_or(&default_doi_url);
+
         println!(
             "\n  {} Deposit published!",
             "OK".green().bold()
         );
+        println!("  DOI:     {}", doi.bold());
+        println!("  URL:     {}", doi_url);
         println!("  View at: {}", web_url);
+
+        // Auto-add DOI badge to README
+        add_doi_badge(&project_dir, doi, doi_url, &tag)?;
     } else {
         println!(
             "\n  {} Draft deposit created (not yet published).",
@@ -98,12 +154,72 @@ pub fn run(project_dir: &Path, sandbox: bool, confirm: bool) -> Result<(), Strin
         );
         println!("  Review at: {}", web_url);
         println!(
-            "\n  To publish, run: release-scholar publish --project-dir {} --confirm",
-            project_dir.display()
+            "\n  To publish, run: release-scholar publish --project-dir {} --confirm{}",
+            project_dir.display(),
+            if sandbox { " --sandbox" } else { "" }
         );
     }
 
     println!();
+    Ok(())
+}
+
+fn add_doi_badge(project_dir: &Path, doi: &str, doi_url: &str, tag: &str) -> Result<(), String> {
+    let readme_path = project_dir.join("README.md");
+    if !readme_path.exists() {
+        return Ok(());
+    }
+
+    let content = std::fs::read_to_string(&readme_path)
+        .map_err(|e| format!("Cannot read README.md: {}", e))?;
+
+    // Check if there's already a DOI badge
+    if content.contains("doi.org") && content.contains("zenodo") {
+        println!(
+            "\n  {} README.md already has a DOI badge — skipping.",
+            "NOTE".dimmed()
+        );
+        return Ok(());
+    }
+
+    // Build badge markdown
+    let badge_url = format!(
+        "https://zenodo.org/badge/DOI/{}.svg",
+        doi
+    );
+    let badge_md = format!(
+        "[![DOI]({})]({})",
+        badge_url, doi_url
+    );
+
+    // Insert after the first heading, or at the top
+    let new_content = if let Some(pos) = content.find('\n') {
+        let first_line = &content[..pos];
+        if first_line.starts_with('#') {
+            format!("{}\n\n{}\n{}", first_line, badge_md, &content[pos + 1..])
+        } else {
+            format!("{}\n\n{}", badge_md, content)
+        }
+    } else {
+        format!("{}\n\n{}", badge_md, content)
+    };
+
+    std::fs::write(&readme_path, new_content)
+        .map_err(|e| format!("Cannot write README.md: {}", e))?;
+
+    println!(
+        "\n  {} Added DOI badge to README.md",
+        "+".green().bold()
+    );
+    println!(
+        "  {}",
+        format!(
+            "Commit and push to update: git add README.md && git commit -m \"Add DOI badge for {}\"",
+            tag
+        )
+        .dimmed()
+    );
+
     Ok(())
 }
 
