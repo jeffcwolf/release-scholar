@@ -31,6 +31,9 @@ Desktop.ini
 *.so
 *.dylib
 
+# Release artifacts
+release/
+
 # Testing
 *.profraw
 *.profdata
