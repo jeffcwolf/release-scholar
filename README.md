@@ -1,5 +1,7 @@
 # release-scholar
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18662259.svg)](https://doi.org/10.5281/zenodo.18662259)
+
 A CLI tool that validates, audits, and packages scholarly software releases for Zenodo/DOI publication.
 
 `release-scholar` automates the tedious parts of publishing research software: metadata validation, security auditing, size analysis, deterministic archiving, Zenodo deposit creation, and forge mirroring — so you get a DOI with minimal friction.
