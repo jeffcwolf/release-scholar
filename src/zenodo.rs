@@ -13,6 +13,7 @@ pub struct ZenodoClient {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct DepositionResponse {
     pub id: u64,
     pub links: DepositionLinks,
@@ -23,6 +24,7 @@ pub struct DepositionResponse {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct DepositionLinks {
     pub html: Option<String>,
     pub bucket: Option<String>,
@@ -32,6 +34,7 @@ pub struct DepositionLinks {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct FileResponse {
     pub key: String,
     pub size: u64,

@@ -3,13 +3,14 @@ use git2::Repository;
 use regex::Regex;
 use std::path::Path;
 
-const SECRET_PATTERNS: &[(&str, &str)] = &[
-    (r"-----BEGIN\s+(RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----", "Private key"),
-    (r#"(?i)(api[_-]?key|api[_-]?secret|access[_-]?token)\s*[:=]\s*['"]?\w{16,}"#, "API key/token"),
-    (r#"(?i)(password|passwd|pwd)\s*[:=]\s*['"]?.{8,}"#, "Password assignment"),
-    (r"AKIA[0-9A-Z]{16}", "AWS Access Key"),
-    (r"ghp_[A-Za-z0-9_]{36}", "GitHub Personal Access Token"),
-    (r"glpat-[A-Za-z0-9_\-]{20}", "GitLab Personal Access Token"),
+// severity: true = FAIL (high confidence), false = WARN (often false positive)
+const SECRET_PATTERNS: &[(&str, &str, bool)] = &[
+    (r"-----BEGIN\s+(RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----", "Private key", true),
+    (r#"(?i)(api[_-]?key|api[_-]?secret|access[_-]?token)\s*[:=]\s*['"]?\w{16,}"#, "API key/token", true),
+    (r#"(?i)(password|passwd|pwd)\s*[:=]\s*['"]?.{8,}"#, "Password assignment", false),
+    (r"AKIA[0-9A-Z]{16}", "AWS Access Key", true),
+    (r"ghp_[A-Za-z0-9_]{36}", "GitHub Personal Access Token", true),
+    (r"glpat-[A-Za-z0-9_\-]{20}", "GitLab Personal Access Token", true),
 ];
 
 const SENSITIVE_FILE_PATTERNS: &[&str] = &[
@@ -35,31 +36,6 @@ const RECOMMENDED_GITIGNORE_PATTERNS: &[&str] = &[
 ];
 
 // Common build artifact patterns by ecosystem
-const BUILD_ARTIFACT_PATTERNS: &[(&str, &str)] = &[
-    // Java/Maven
-    ("target/", "Java/Maven build output"),
-    ("*.class", "Java compiled classes"),
-    ("*.jar", "Java archives"),
-    ("*.war", "Java web archives"),
-    // Python
-    ("__pycache__/", "Python bytecode cache"),
-    ("*.pyc", "Python compiled files"),
-    ("*.egg-info", "Python package metadata"),
-    (".venv/", "Python virtual environment"),
-    ("venv/", "Python virtual environment"),
-    ("dist/", "Distribution output"),
-    ("build/", "Build output"),
-    // Rust
-    ("target/", "Rust/Cargo build output"),
-    // Node.js
-    ("node_modules/", "Node.js dependencies"),
-    // General
-    ("*.log", "Log files"),
-    ("*.tmp", "Temporary files"),
-    ("*.bak", "Backup files"),
-    ("*.swp", "Vim swap files"),
-    ("release/", "Release artifacts"),
-];
 
 pub fn validate(project_dir: &Path, report: &mut Report) {
     let repo = match Repository::open(project_dir) {
@@ -77,9 +53,9 @@ pub fn validate(project_dir: &Path, report: &mut Report) {
 }
 
 fn scan_tracked_files_for_secrets(repo: &Repository, project_dir: &Path, report: &mut Report) {
-    let patterns: Vec<(Regex, &str)> = SECRET_PATTERNS
+    let patterns: Vec<(Regex, &str, bool)> = SECRET_PATTERNS
         .iter()
-        .filter_map(|(pat, name)| Regex::new(pat).ok().map(|r| (r, *name)))
+        .filter_map(|(pat, name, is_fail)| Regex::new(pat).ok().map(|r| (r, *name, *is_fail)))
         .collect();
 
     let index = match repo.index() {
@@ -94,12 +70,19 @@ fn scan_tracked_files_for_secrets(repo: &Repository, project_dir: &Path, report:
 
         // Only scan text-like files
         if let Ok(content) = std::fs::read_to_string(&full_path) {
-            for (re, name) in &patterns {
+            for (re, name, is_fail) in &patterns {
                 if re.is_match(&content) {
-                    report.fail(
-                        "Security",
-                        &format!("Possible {} found in tracked file: {}", name, path_str),
-                    );
+                    if *is_fail {
+                        report.fail(
+                            "Security",
+                            &format!("Possible {} found in tracked file: {}", name, path_str),
+                        );
+                    } else {
+                        report.warn(
+                            "Security",
+                            &format!("Possible {} found in tracked file: {}", name, path_str),
+                        );
+                    }
                     found_secrets = true;
                 }
             }
@@ -143,9 +126,11 @@ fn scan_sensitive_files(repo: &Repository, report: &mut Report) {
 }
 
 fn scan_git_history(repo: &Repository, report: &mut Report) {
+    // Only scan high-confidence patterns in git history
     let patterns: Vec<(Regex, &str)> = SECRET_PATTERNS
         .iter()
-        .filter_map(|(pat, name)| Regex::new(pat).ok().map(|r| (r, *name)))
+        .filter(|(_, _, is_fail)| *is_fail)
+        .filter_map(|(pat, name, _)| Regex::new(pat).ok().map(|r| (r, *name)))
         .collect();
 
     let mut revwalk = match repo.revwalk() {

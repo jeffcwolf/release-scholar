@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: "release-scholar"
+type: software
+authors:
+  - family-names: "Wolf"
+    given-names: "Jeff"
+    email: "research_coder@noreply.codeberg.org"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+version: "0.1.0"
+license: Apache-2.0
+date-released: "2026-02-16"
+repository-code: "https://codeberg.org/research_coder/release-scholar"
+abstract: "A CLI tool that validates, audits, and packages scholarly software releases for Zenodo/DOI publication."
+keywords:
+  - research-software
+  - scholarly-publishing
+  - zenodo
+  - doi
+  - citation
+  - Rust

@@ -5,6 +5,7 @@ use std::path::Path;
 
 pub struct GitInfo {
     pub version: String,
+    #[allow(dead_code)]
     pub tag: String,
 }
 

@@ -22,6 +22,9 @@ pub fn run(project_dir: &Path) -> Result<(), String> {
     // Security audit
     validation::security::validate(&project_dir, &mut report);
 
+    // Size audit
+    validation::size::validate(&project_dir, &mut report);
+
     report.print();
 
     if report.has_failures() {

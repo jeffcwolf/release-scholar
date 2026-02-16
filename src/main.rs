@@ -48,6 +48,12 @@ enum Commands {
         #[arg(long)]
         confirm: bool,
     },
+    /// Set up push mirrors from Codeberg to GitHub/GitLab
+    Mirror {
+        /// Path to the project directory
+        #[arg(long, default_value = ".")]
+        project_dir: PathBuf,
+    },
 }
 
 fn main() {
@@ -57,6 +63,7 @@ fn main() {
         Commands::Check { project_dir } => commands::check::run(&project_dir),
         Commands::Build { project_dir } => commands::build::run(&project_dir),
         Commands::Publish { project_dir, sandbox, confirm } => commands::publish::run(&project_dir, sandbox, confirm),
+        Commands::Mirror { project_dir } => commands::mirror::run(&project_dir),
     };
     if let Err(e) = result {
         eprintln!("{}", e);
