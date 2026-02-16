@@ -34,6 +34,33 @@ const RECOMMENDED_GITIGNORE_PATTERNS: &[&str] = &[
     "id_rsa",
 ];
 
+// Common build artifact patterns by ecosystem
+const BUILD_ARTIFACT_PATTERNS: &[(&str, &str)] = &[
+    // Java/Maven
+    ("target/", "Java/Maven build output"),
+    ("*.class", "Java compiled classes"),
+    ("*.jar", "Java archives"),
+    ("*.war", "Java web archives"),
+    // Python
+    ("__pycache__/", "Python bytecode cache"),
+    ("*.pyc", "Python compiled files"),
+    ("*.egg-info", "Python package metadata"),
+    (".venv/", "Python virtual environment"),
+    ("venv/", "Python virtual environment"),
+    ("dist/", "Distribution output"),
+    ("build/", "Build output"),
+    // Rust
+    ("target/", "Rust/Cargo build output"),
+    // Node.js
+    ("node_modules/", "Node.js dependencies"),
+    // General
+    ("*.log", "Log files"),
+    ("*.tmp", "Temporary files"),
+    ("*.bak", "Backup files"),
+    ("*.swp", "Vim swap files"),
+    ("release/", "Release artifacts"),
+];
+
 pub fn validate(project_dir: &Path, report: &mut Report) {
     let repo = match Repository::open(project_dir) {
         Ok(r) => r,
@@ -190,7 +217,7 @@ fn scan_git_history(repo: &Repository, report: &mut Report) {
 fn audit_gitignore(project_dir: &Path, report: &mut Report) {
     let gitignore_path = project_dir.join(".gitignore");
     if !gitignore_path.exists() {
-        report.warn("Security", ".gitignore not found");
+        report.warn("Gitignore", ".gitignore not found");
         return;
     }
 
@@ -199,22 +226,108 @@ fn audit_gitignore(project_dir: &Path, report: &mut Report) {
         Err(_) => return,
     };
 
-    let mut missing = Vec::new();
+    // Check security patterns
+    let mut missing_security = Vec::new();
     for pattern in RECOMMENDED_GITIGNORE_PATTERNS {
-        if !content.lines().any(|line| {
-            let trimmed = line.trim();
-            trimmed == *pattern || trimmed.starts_with(pattern)
-        }) {
-            missing.push(*pattern);
+        if !gitignore_contains(&content, pattern) {
+            missing_security.push(*pattern);
         }
     }
 
-    if missing.is_empty() {
-        report.pass("Security", ".gitignore covers common sensitive patterns");
+    if missing_security.is_empty() {
+        report.pass("Gitignore", "Covers common sensitive file patterns");
     } else {
         report.warn(
-            "Security",
-            &format!(".gitignore missing recommended patterns: {}", missing.join(", ")),
+            "Gitignore",
+            &format!("Missing security patterns: {}", missing_security.join(", ")),
         );
     }
+
+    // Detect which ecosystems are present and check for relevant build artifact patterns
+    let relevant = detect_relevant_artifacts(project_dir);
+    let mut missing_artifacts: Vec<String> = Vec::new();
+    for (pattern, description) in &relevant {
+        if !gitignore_contains(&content, pattern) {
+            missing_artifacts.push(format!("{} ({})", pattern, description));
+        }
+    }
+
+    if missing_artifacts.is_empty() {
+        report.pass("Gitignore", "Covers build artifact patterns for detected languages");
+    } else {
+        for missing in &missing_artifacts {
+            report.warn("Gitignore", &format!("Missing build artifact pattern: {}", missing));
+        }
+    }
+}
+
+fn gitignore_contains(content: &str, pattern: &str) -> bool {
+    content.lines().any(|line| {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            return false;
+        }
+        // Exact match or pattern is covered (e.g., "target/" covers "target/")
+        trimmed == pattern
+            || trimmed == pattern.trim_end_matches('/')
+            || (pattern.starts_with('*') && trimmed == pattern)
+    })
+}
+
+/// Detect which ecosystems are present and return relevant artifact patterns
+fn detect_relevant_artifacts(project_dir: &Path) -> Vec<(&'static str, &'static str)> {
+    let mut relevant = Vec::new();
+
+    // Always recommend release/
+    relevant.push(("release/", "release-scholar build artifacts"));
+
+    // Java/Maven
+    if project_dir.join("pom.xml").exists() || project_dir.join("build.gradle").exists() {
+        relevant.push(("target/", "Java/Maven build output"));
+        relevant.push(("*.class", "Java compiled classes"));
+    }
+
+    // Python
+    if project_dir.join("setup.py").exists()
+        || project_dir.join("pyproject.toml").exists()
+        || project_dir.join("requirements.txt").exists()
+        || has_files_with_extension(project_dir, ".py")
+    {
+        relevant.push(("__pycache__/", "Python bytecode cache"));
+        relevant.push(("*.pyc", "Python compiled files"));
+        relevant.push(("*.egg-info", "Python package metadata"));
+        relevant.push(("dist/", "Python distribution output"));
+    }
+
+    // Rust
+    if project_dir.join("Cargo.toml").exists() {
+        relevant.push(("target/", "Rust/Cargo build output"));
+    }
+
+    // Node.js
+    if project_dir.join("package.json").exists() {
+        relevant.push(("node_modules/", "Node.js dependencies"));
+    }
+
+    // General
+    relevant.push((".DS_Store", "macOS metadata files"));
+
+    // Deduplicate by pattern
+    relevant.sort_by_key(|&(p, _)| p);
+    relevant.dedup_by_key(|&mut (p, _)| p);
+
+    relevant
+}
+
+fn has_files_with_extension(dir: &Path, ext: &str) -> bool {
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            if let Some(name) = entry.file_name().to_str() {
+                if name.ends_with(ext) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
 }
