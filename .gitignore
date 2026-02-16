@@ -46,3 +46,8 @@ release/
 # Backup files
 *.bak
 *.backup
+
+# Security
+*.pem
+*.key
+id_rsa
