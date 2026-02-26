@@ -14,7 +14,10 @@ pub fn run(project_dir: &Path) -> Result<(), String> {
     let version = get_version_from_tag(&project_dir)?;
     let tag = format!("v{}", version);
 
-    println!("{}", format!("Building release bundle for {}...", tag).bold());
+    println!(
+        "{}",
+        format!("Building release bundle for {}...", tag).bold()
+    );
     println!();
 
     // Create output directory
@@ -83,7 +86,9 @@ pub fn run(project_dir: &Path) -> Result<(), String> {
 fn get_version_from_tag(project_dir: &Path) -> Result<String, String> {
     let repo =
         git2::Repository::open(project_dir).map_err(|e| format!("Cannot open repo: {}", e))?;
-    let head = repo.head().map_err(|e| format!("Cannot read HEAD: {}", e))?;
+    let head = repo
+        .head()
+        .map_err(|e| format!("Cannot read HEAD: {}", e))?;
     let head_oid = head.target().ok_or("HEAD has no target")?;
 
     let tag_names = repo.tag_names(None).map_err(|e| e.to_string())?;

@@ -94,8 +94,8 @@ impl ZenodoClient {
         file_path: &Path,
         filename: &str,
     ) -> Result<FileResponse, String> {
-        let data =
-            std::fs::read(file_path).map_err(|e| format!("Cannot read {}: {}", file_path.display(), e))?;
+        let data = std::fs::read(file_path)
+            .map_err(|e| format!("Cannot read {}: {}", file_path.display(), e))?;
 
         let url = format!("{}/{}", bucket_url, filename);
         let resp = self
@@ -162,10 +162,7 @@ impl ZenodoClient {
         let status = resp.status();
         if !status.is_success() {
             let body = resp.text().unwrap_or_default();
-            return Err(format!(
-                "Zenodo API error {} publishing: {}",
-                status, body
-            ));
+            return Err(format!("Zenodo API error {} publishing: {}", status, body));
         }
 
         resp.json::<DepositionResponse>()
@@ -196,11 +193,7 @@ fn load_token(sandbox: bool) -> Result<String, String> {
     }
 
     // Try config file
-    let filename = if sandbox {
-        "sandbox-token"
-    } else {
-        "token"
-    };
+    let filename = if sandbox { "sandbox-token" } else { "token" };
 
     let config_dir = dirs::config_dir()
         .ok_or("Cannot determine config directory")?

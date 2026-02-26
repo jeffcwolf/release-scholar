@@ -76,7 +76,14 @@ abstract: "A brief description of the software."
 keywords:
   - research-software
 "#,
-            project_name, family, given, author_email, author_orcid, today, forge_base, project_name
+            project_name,
+            family,
+            given,
+            author_email,
+            author_orcid,
+            today,
+            forge_base,
+            project_name
         );
         std::fs::write(&citation_path, cff)
             .map_err(|e| format!("Cannot write CITATION.cff: {}", e))?;
@@ -152,9 +159,7 @@ fn split_name(name: &str) -> (&str, &str) {
 
 fn chrono_free_today() -> String {
     // Read from system without chrono dependency
-    let output = std::process::Command::new("date")
-        .arg("+%Y-%m-%d")
-        .output();
+    let output = std::process::Command::new("date").arg("+%Y-%m-%d").output();
     match output {
         Ok(o) => String::from_utf8_lossy(&o.stdout).trim().to_string(),
         Err(_) => "YYYY-MM-DD".to_string(),

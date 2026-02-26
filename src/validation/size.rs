@@ -8,16 +8,10 @@ const REPO_SIZE_WARN_THRESHOLD: u64 = 50_000_000; // 50 MB
 const REPO_SIZE_FAIL_THRESHOLD: u64 = 200_000_000; // 200 MB
 
 const BINARY_EXTENSIONS: &[&str] = &[
-    ".zip", ".tar", ".gz", ".bz2", ".xz", ".7z", ".rar",
-    ".jar", ".war", ".ear",
-    ".exe", ".dll", ".so", ".dylib",
-    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".ico", ".svg",
-    ".mp3", ".mp4", ".avi", ".mov", ".wav", ".flac",
-    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
-    ".woff", ".woff2", ".ttf", ".eot",
-    ".sqlite", ".db",
-    ".min.js", ".min.css",
-    ".map",
+    ".zip", ".tar", ".gz", ".bz2", ".xz", ".7z", ".rar", ".jar", ".war", ".ear", ".exe", ".dll",
+    ".so", ".dylib", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".ico", ".svg", ".mp3",
+    ".mp4", ".avi", ".mov", ".wav", ".flac", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
+    ".pptx", ".woff", ".woff2", ".ttf", ".eot", ".sqlite", ".db", ".min.js", ".min.css", ".map",
 ];
 
 pub fn validate(project_dir: &Path, report: &mut Report) {
@@ -49,15 +43,14 @@ pub fn validate(project_dir: &Path, report: &mut Report) {
         file_count += 1;
 
         // Check for large files
-        if size >= VERY_LARGE_FILE_THRESHOLD {
-            large_files.push((path_str.clone(), size));
-        } else if size >= LARGE_FILE_THRESHOLD {
+        if size >= LARGE_FILE_THRESHOLD {
             large_files.push((path_str.clone(), size));
         }
 
         // Check for binary/vendor files that probably shouldn't be tracked
         let lower = path_str.to_lowercase();
-        if BINARY_EXTENSIONS.iter().any(|ext| lower.ends_with(ext)) && size >= LARGE_FILE_THRESHOLD {
+        if BINARY_EXTENSIONS.iter().any(|ext| lower.ends_with(ext)) && size >= LARGE_FILE_THRESHOLD
+        {
             binary_files.push((path_str, size));
         }
     }
@@ -67,7 +60,10 @@ pub fn validate(project_dir: &Path, report: &mut Report) {
     if total_size >= REPO_SIZE_FAIL_THRESHOLD {
         report.fail(
             "Size",
-            &format!("Tracked files total {:.1} MB — too large for a code repository", total_mb),
+            &format!(
+                "Tracked files total {:.1} MB — too large for a code repository",
+                total_mb
+            ),
         );
     } else if total_size >= REPO_SIZE_WARN_THRESHOLD {
         report.warn(
@@ -77,7 +73,10 @@ pub fn validate(project_dir: &Path, report: &mut Report) {
     } else {
         report.pass(
             "Size",
-            &format!("Tracked files total {:.1} MB ({} files)", total_mb, file_count),
+            &format!(
+                "Tracked files total {:.1} MB ({} files)",
+                total_mb, file_count
+            ),
         );
     }
 
@@ -90,13 +89,13 @@ pub fn validate(project_dir: &Path, report: &mut Report) {
             if *size >= VERY_LARGE_FILE_THRESHOLD {
                 report.fail(
                     "Size",
-                    &format!("{} is {:.1} MB — consider removing or using Git LFS", path, size_mb),
+                    &format!(
+                        "{} is {:.1} MB — consider removing or using Git LFS",
+                        path, size_mb
+                    ),
                 );
             } else {
-                report.warn(
-                    "Size",
-                    &format!("{} is {:.1} MB", path, size_mb),
-                );
+                report.warn("Size", &format!("{} is {:.1} MB", path, size_mb));
             }
         }
     }
@@ -107,7 +106,10 @@ pub fn validate(project_dir: &Path, report: &mut Report) {
             let size_mb = *size as f64 / 1_000_000.0;
             report.warn(
                 "Size",
-                &format!("Binary/vendor file tracked: {} ({:.1} MB) — consider .gitignore or Git LFS", path, size_mb),
+                &format!(
+                    "Binary/vendor file tracked: {} ({:.1} MB) — consider .gitignore or Git LFS",
+                    path, size_mb
+                ),
             );
         }
     }

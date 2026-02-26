@@ -20,7 +20,9 @@ pub struct Report {
 
 impl Report {
     pub fn new() -> Self {
-        Report { results: Vec::new() }
+        Report {
+            results: Vec::new(),
+        }
     }
 
     pub fn add(&mut self, category: &str, message: &str, status: Status) {
@@ -44,7 +46,9 @@ impl Report {
     }
 
     pub fn has_failures(&self) -> bool {
-        self.results.iter().any(|r| matches!(r.status, Status::Fail))
+        self.results
+            .iter()
+            .any(|r| matches!(r.status, Status::Fail))
     }
 
     pub fn print(&self) {
@@ -60,22 +64,41 @@ impl Report {
             println!("  {} {}: {}", icon, result.category.bold(), result.message);
         }
 
-        let passes = self.results.iter().filter(|r| matches!(r.status, Status::Pass)).count();
-        let fails = self.results.iter().filter(|r| matches!(r.status, Status::Fail)).count();
-        let warns = self.results.iter().filter(|r| matches!(r.status, Status::Warn)).count();
+        let passes = self
+            .results
+            .iter()
+            .filter(|r| matches!(r.status, Status::Pass))
+            .count();
+        let fails = self
+            .results
+            .iter()
+            .filter(|r| matches!(r.status, Status::Fail))
+            .count();
+        let warns = self
+            .results
+            .iter()
+            .filter(|r| matches!(r.status, Status::Warn))
+            .count();
 
         println!();
         println!(
             "  {} passed, {} failed, {} warnings",
             passes.to_string().green(),
-            if fails > 0 { fails.to_string().red() } else { fails.to_string().normal() },
+            if fails > 0 {
+                fails.to_string().red()
+            } else {
+                fails.to_string().normal()
+            },
             warns.to_string().yellow()
         );
 
         if fails > 0 {
             println!("\n  {}", "Release is NOT ready.".red().bold());
         } else if warns > 0 {
-            println!("\n  {}", "Release is ready (with warnings).".yellow().bold());
+            println!(
+                "\n  {}",
+                "Release is ready (with warnings).".yellow().bold()
+            );
         } else {
             println!("\n  {}", "Release is ready!".green().bold());
         }

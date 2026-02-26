@@ -44,16 +44,27 @@ pub fn validate(project_dir: &Path, expected_version: Option<&str>, report: &mut
     match authors {
         Some(list) if !list.is_empty() => {
             report.pass("Citation", &format!("{} author(s) found", list.len()));
-            let orcid_re = Regex::new(r"^https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$").unwrap();
+            let orcid_re =
+                Regex::new(r"^https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[\dX]$").unwrap();
             for (i, author) in list.iter().enumerate() {
-                if author.get("family-names").and_then(|v| v.as_str()).is_none() {
-                    report.fail("Citation", &format!("Author {} missing family-names", i + 1));
+                if author
+                    .get("family-names")
+                    .and_then(|v| v.as_str())
+                    .is_none()
+                {
+                    report.fail(
+                        "Citation",
+                        &format!("Author {} missing family-names", i + 1),
+                    );
                 }
                 if let Some(orcid) = author.get("orcid").and_then(|v| v.as_str()) {
                     if orcid_re.is_match(orcid) {
                         report.pass("Citation", &format!("Author {} ORCID valid", i + 1));
                     } else {
-                        report.fail("Citation", &format!("Author {} ORCID invalid: {}", i + 1, orcid));
+                        report.fail(
+                            "Citation",
+                            &format!("Author {} ORCID invalid: {}", i + 1, orcid),
+                        );
                     }
                 }
             }
@@ -70,7 +81,10 @@ pub fn validate(project_dir: &Path, expected_version: Option<&str>, report: &mut
                 report.pass("Citation", &format!("version matches git tag ({})", v));
             }
             Some(v) => {
-                report.fail("Citation", &format!("version '{}' does not match git tag '{}'", v, expected));
+                report.fail(
+                    "Citation",
+                    &format!("version '{}' does not match git tag '{}'", v, expected),
+                );
             }
             None => {
                 report.fail("Citation", "version missing");

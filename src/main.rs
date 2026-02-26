@@ -10,7 +10,11 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "release-scholar", version, about = "Validate, audit, and package scholarly software releases")]
+#[command(
+    name = "release-scholar",
+    version,
+    about = "Validate, audit, and package scholarly software releases"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -62,7 +66,11 @@ fn main() {
         Commands::Init { project_dir } => commands::init::run(&project_dir),
         Commands::Check { project_dir } => commands::check::run(&project_dir),
         Commands::Build { project_dir } => commands::build::run(&project_dir),
-        Commands::Publish { project_dir, sandbox, confirm } => commands::publish::run(&project_dir, sandbox, confirm),
+        Commands::Publish {
+            project_dir,
+            sandbox,
+            confirm,
+        } => commands::publish::run(&project_dir, sandbox, confirm),
         Commands::Mirror { project_dir } => commands::mirror::run(&project_dir),
     };
     if let Err(e) = result {

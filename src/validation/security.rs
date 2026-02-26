@@ -5,12 +5,32 @@ use std::path::Path;
 
 // severity: true = FAIL (high confidence), false = WARN (often false positive)
 const SECRET_PATTERNS: &[(&str, &str, bool)] = &[
-    (r"-----BEGIN\s+(RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----", "Private key", true),
-    (r#"(?i)(api[_-]?key|api[_-]?secret|access[_-]?token)\s*[:=]\s*['"]?\w{16,}"#, "API key/token", true),
-    (r#"(?i)(password|passwd|pwd)\s*[:=]\s*['"]?.{8,}"#, "Password assignment", false),
+    (
+        r"-----BEGIN\s+(RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----",
+        "Private key",
+        true,
+    ),
+    (
+        r#"(?i)(api[_-]?key|api[_-]?secret|access[_-]?token)\s*[:=]\s*['"]?\w{16,}"#,
+        "API key/token",
+        true,
+    ),
+    (
+        r#"(?i)(password|passwd|pwd)\s*[:=]\s*['"]?.{8,}"#,
+        "Password assignment",
+        false,
+    ),
     (r"AKIA[0-9A-Z]{16}", "AWS Access Key", true),
-    (r"ghp_[A-Za-z0-9_]{36}", "GitHub Personal Access Token", true),
-    (r"glpat-[A-Za-z0-9_\-]{20}", "GitLab Personal Access Token", true),
+    (
+        r"ghp_[A-Za-z0-9_]{36}",
+        "GitHub Personal Access Token",
+        true,
+    ),
+    (
+        r"glpat-[A-Za-z0-9_\-]{20}",
+        "GitLab Personal Access Token",
+        true,
+    ),
 ];
 
 const SENSITIVE_FILE_PATTERNS: &[&str] = &[
@@ -27,13 +47,7 @@ const SENSITIVE_FILE_PATTERNS: &[&str] = &[
     ".pfx",
 ];
 
-const RECOMMENDED_GITIGNORE_PATTERNS: &[&str] = &[
-    ".env",
-    ".DS_Store",
-    "*.pem",
-    "*.key",
-    "id_rsa",
-];
+const RECOMMENDED_GITIGNORE_PATTERNS: &[&str] = &[".env", ".DS_Store", "*.pem", "*.key", "id_rsa"];
 
 // Common build artifact patterns by ecosystem
 
@@ -111,10 +125,7 @@ fn scan_sensitive_files(repo: &Repository, report: &mut Report) {
 
         for pattern in SENSITIVE_FILE_PATTERNS {
             if filename == *pattern || filename.ends_with(pattern) {
-                report.warn(
-                    "Security",
-                    &format!("Sensitive file tracked: {}", path_str),
-                );
+                report.warn("Security", &format!("Sensitive file tracked: {}", path_str));
                 found = true;
             }
         }
@@ -193,9 +204,18 @@ fn scan_git_history(repo: &Repository, report: &mut Report) {
     }
 
     if found_in_history {
-        report.warn("Security", "Potential secrets found in git history (review recommended)");
+        report.warn(
+            "Security",
+            "Potential secrets found in git history (review recommended)",
+        );
     } else {
-        report.pass("Security", &format!("No secrets found in git history ({} commits scanned)", commits_checked));
+        report.pass(
+            "Security",
+            &format!(
+                "No secrets found in git history ({} commits scanned)",
+                commits_checked
+            ),
+        );
     }
 }
 
@@ -238,10 +258,16 @@ fn audit_gitignore(project_dir: &Path, report: &mut Report) {
     }
 
     if missing_artifacts.is_empty() {
-        report.pass("Gitignore", "Covers build artifact patterns for detected languages");
+        report.pass(
+            "Gitignore",
+            "Covers build artifact patterns for detected languages",
+        );
     } else {
         for missing in &missing_artifacts {
-            report.warn("Gitignore", &format!("Missing build artifact pattern: {}", missing));
+            report.warn(
+                "Gitignore",
+                &format!("Missing build artifact pattern: {}", missing),
+            );
         }
     }
 }
@@ -253,9 +279,7 @@ fn gitignore_contains(content: &str, pattern: &str) -> bool {
             return false;
         }
         // Exact match or pattern is covered (e.g., "target/" covers "target/")
-        trimmed == pattern
-            || trimmed == pattern.trim_end_matches('/')
-            || (pattern.starts_with('*') && trimmed == pattern)
+        trimmed == pattern || trimmed == pattern.trim_end_matches('/')
     })
 }
 

@@ -119,11 +119,7 @@ pub fn run(project_dir: &Path, sandbox: bool, confirm: bool) -> Result<(), Strin
     println!("{}", "done".green());
 
     // Step 4: Publish or leave as draft
-    let web_url = format!(
-        "{}/deposit/{}",
-        client.base_web_url(),
-        deposition_id
-    );
+    let web_url = format!("{}/deposit/{}", client.base_web_url(), deposition_id);
 
     if confirm {
         print!("  Publishing... ");
@@ -132,15 +128,9 @@ pub fn run(project_dir: &Path, sandbox: bool, confirm: bool) -> Result<(), Strin
 
         let doi = published.doi.as_deref().unwrap_or("pending");
         let default_doi_url = format!("https://doi.org/{}", doi);
-        let doi_url = published
-            .doi_url
-            .as_deref()
-            .unwrap_or(&default_doi_url);
+        let doi_url = published.doi_url.as_deref().unwrap_or(&default_doi_url);
 
-        println!(
-            "\n  {} Deposit published!",
-            "OK".green().bold()
-        );
+        println!("\n  {} Deposit published!", "OK".green().bold());
         println!("  DOI:     {}", doi.bold());
         println!("  URL:     {}", doi_url);
         println!("  View at: {}", web_url);
@@ -183,14 +173,8 @@ fn add_doi_badge(project_dir: &Path, doi: &str, doi_url: &str, tag: &str) -> Res
     }
 
     // Build badge markdown
-    let badge_url = format!(
-        "https://zenodo.org/badge/DOI/{}.svg",
-        doi
-    );
-    let badge_md = format!(
-        "[![DOI]({})]({})",
-        badge_url, doi_url
-    );
+    let badge_url = format!("https://zenodo.org/badge/DOI/{}.svg", doi);
+    let badge_md = format!("[![DOI]({})]({})", badge_url, doi_url);
 
     // Insert after the first heading, or at the top
     let new_content = if let Some(pos) = content.find('\n') {
@@ -207,10 +191,7 @@ fn add_doi_badge(project_dir: &Path, doi: &str, doi_url: &str, tag: &str) -> Res
     std::fs::write(&readme_path, new_content)
         .map_err(|e| format!("Cannot write README.md: {}", e))?;
 
-    println!(
-        "\n  {} Added DOI badge to README.md",
-        "+".green().bold()
-    );
+    println!("\n  {} Added DOI badge to README.md", "+".green().bold());
     println!(
         "  {}",
         format!(
@@ -226,7 +207,9 @@ fn add_doi_badge(project_dir: &Path, doi: &str, doi_url: &str, tag: &str) -> Res
 fn get_version(project_dir: &Path) -> Result<String, String> {
     let repo =
         git2::Repository::open(project_dir).map_err(|e| format!("Cannot open repo: {}", e))?;
-    let head = repo.head().map_err(|e| format!("Cannot read HEAD: {}", e))?;
+    let head = repo
+        .head()
+        .map_err(|e| format!("Cannot read HEAD: {}", e))?;
     let head_oid = head.target().ok_or("HEAD has no target")?;
 
     let tag_names = repo.tag_names(None).map_err(|e| e.to_string())?;

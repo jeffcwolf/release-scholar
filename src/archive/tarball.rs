@@ -4,11 +4,7 @@ use git2::Repository;
 use std::path::Path;
 use tar::Header;
 
-pub fn create_archive(
-    project_dir: &Path,
-    tag: &str,
-    output_path: &Path,
-) -> Result<(), String> {
+pub fn create_archive(project_dir: &Path, tag: &str, output_path: &Path) -> Result<(), String> {
     let repo = Repository::open(project_dir).map_err(|e| format!("Cannot open repo: {}", e))?;
 
     // Resolve tag to tree
@@ -22,12 +18,19 @@ pub fn create_archive(
         .tree()
         .map_err(|e| format!("Cannot get tree: {}", e))?;
 
-    let file = std::fs::File::create(output_path)
-        .map_err(|e| format!("Cannot create archive: {}", e))?;
+    let file =
+        std::fs::File::create(output_path).map_err(|e| format!("Cannot create archive: {}", e))?;
     let enc = GzEncoder::new(file, Compression::default());
     let mut ar = tar::Builder::new(enc);
 
-    let prefix = format!("{}-{}", project_dir.file_name().unwrap_or_default().to_string_lossy(), tag);
+    let prefix = format!(
+        "{}-{}",
+        project_dir
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy(),
+        tag
+    );
 
     // Collect all blobs sorted by path for determinism
     let mut entries: Vec<(String, Vec<u8>, u32)> = Vec::new();
@@ -54,8 +57,11 @@ pub fn create_archive(
             .map_err(|e| format!("Cannot add {}: {}", path, e))?;
     }
 
-    let enc = ar.into_inner().map_err(|e| format!("Cannot finalize tar: {}", e))?;
-    enc.finish().map_err(|e| format!("Cannot finalize gzip: {}", e))?;
+    let enc = ar
+        .into_inner()
+        .map_err(|e| format!("Cannot finalize tar: {}", e))?;
+    enc.finish()
+        .map_err(|e| format!("Cannot finalize gzip: {}", e))?;
 
     Ok(())
 }

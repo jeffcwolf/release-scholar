@@ -59,10 +59,7 @@ pub fn run(project_dir: &Path) -> Result<(), String> {
     if let (Some(gh_user), Some(gh_token)) = (&mirrors.github_user, &mirrors.github_token) {
         let gh_url = format!("https://github.com/{}/{}.git", gh_user, repo_name);
         if existing.iter().any(|url| url.contains("github.com")) {
-            println!(
-                "  {} GitHub mirror already exists — skipping",
-                "OK".green()
-            );
+            println!("  {} GitHub mirror already exists — skipping", "OK".green());
         } else {
             print!("  Adding GitHub mirror... ");
             add_push_mirror(
@@ -88,10 +85,7 @@ pub fn run(project_dir: &Path) -> Result<(), String> {
     if let (Some(gl_user), Some(gl_token)) = (&mirrors.gitlab_user, &mirrors.gitlab_token) {
         let gl_url = format!("https://gitlab.com/{}/{}.git", gl_user, repo_name);
         if existing.iter().any(|url| url.contains("gitlab.com")) {
-            println!(
-                "  {} GitLab mirror already exists — skipping",
-                "OK".green()
-            );
+            println!("  {} GitLab mirror already exists — skipping", "OK".green());
         } else {
             print!("  Adding GitLab mirror... ");
             add_push_mirror(
@@ -140,13 +134,20 @@ fn get_existing_mirrors(
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().unwrap_or_default();
-        return Err(format!("Codeberg API error {} listing mirrors: {}", status, body));
+        return Err(format!(
+            "Codeberg API error {} listing mirrors: {}",
+            status, body
+        ));
     }
 
     let mirrors: Vec<serde_json::Value> = resp.json().unwrap_or_default();
     Ok(mirrors
         .iter()
-        .filter_map(|m| m.get("remote_address").and_then(|v| v.as_str()).map(String::from))
+        .filter_map(|m| {
+            m.get("remote_address")
+                .and_then(|v| v.as_str())
+                .map(String::from)
+        })
         .collect())
 }
 
@@ -182,7 +183,10 @@ fn add_push_mirror(
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().unwrap_or_default();
-        return Err(format!("Codeberg API error {} adding mirror: {}", status, body));
+        return Err(format!(
+            "Codeberg API error {} adding mirror: {}",
+            status, body
+        ));
     }
 
     Ok(())

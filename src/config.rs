@@ -3,16 +3,12 @@ use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum Forge {
+    #[default]
     Codeberg,
     Github,
     Gitlab,
-}
-
-impl Default for Forge {
-    fn default() -> Self {
-        Forge::Codeberg
-    }
 }
 
 impl std::fmt::Display for Forge {

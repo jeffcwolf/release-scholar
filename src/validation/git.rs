@@ -24,9 +24,7 @@ pub fn validate(project_dir: &Path, report: &mut Report) -> Option<GitInfo> {
         Ok(s) => {
             let dirty: Vec<String> = s
                 .iter()
-                .filter(|e| {
-                    e.status() != git2::Status::IGNORED
-                })
+                .filter(|e| e.status() != git2::Status::IGNORED)
                 .map(|e| e.path().unwrap_or("?").to_string())
                 .collect();
             if dirty.is_empty() {
@@ -87,7 +85,10 @@ pub fn validate(project_dir: &Path, report: &mut Report) -> Option<GitInfo> {
 
     match found_tag {
         Some((tag, version)) => {
-            report.pass("Git", &format!("HEAD is tagged: {} (version {})", tag, version));
+            report.pass(
+                "Git",
+                &format!("HEAD is tagged: {} (version {})", tag, version),
+            );
             Some(GitInfo { version, tag })
         }
         None => {
