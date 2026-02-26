@@ -8,14 +8,6 @@ stages:
   - build
   - test
 
-variables:
-  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
-
-cache:
-  paths:
-    - .cargo/
-    - target/
-
 format:
   stage: check
   script:
