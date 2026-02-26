@@ -17,6 +17,10 @@ If you write research software, you should be citing it. That means:
 
 `release-scholar` handles all of this in a single workflow.
 
+> **Project scope:** This tool is actively maintained for my own research use.
+> Issues and pull requests are not monitored. You are welcome to fork and
+> adapt it freely under the Apache-2.0 license.
+
 ## Install
 
 **From source (requires Rust toolchain):**
@@ -153,7 +157,7 @@ The tag **must** be semver format: `vX.Y.Z`.
 release-scholar check --project-dir .
 ```
 
-This runs five audit categories:
+This runs six audit categories:
 
 - **Git** — clean working directory, semver tag on HEAD
 - **Files** — required files exist (LICENSE, README.md, CHANGELOG.md, CITATION.cff)
