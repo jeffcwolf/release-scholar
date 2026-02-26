@@ -1,6 +1,7 @@
 # release-scholar
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18662259.svg)](https://doi.org/10.5281/zenodo.18662259)
+[![CI](https://github.com/jeffcwolf/release-scholar/actions/workflows/ci.yml/badge.svg)](https://github.com/jeffcwolf/release-scholar/actions/workflows/ci.yml)
 
 A CLI tool that validates, audits, and packages scholarly software releases for Zenodo/DOI publication.
 
