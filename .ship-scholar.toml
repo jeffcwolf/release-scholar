@@ -1,0 +1,22 @@
+[project]
+type = "cli"
+language = "rust"
+
+[checks]
+# Categories to skip entirely. Available:
+#   ci, build, security, tests, docs, apidocs, examples,
+#   assets, distribution, community, reuse, metadata
+skip = []
+
+# Treat these as WARN even if they would otherwise FAIL
+# (e.g. "reuse" is warn-only by convention for solo research tools)
+warn_only = ["reuse"]
+
+[demo]
+tool = "vhs"
+tape_file = "assets/demo.tape"
+output = "assets/demo.gif"
+
+[release]
+# release_scholar_bin = "release-scholar"
+auto_confirm = false

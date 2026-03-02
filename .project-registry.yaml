@@ -1,0 +1,11 @@
+name: release-scholar
+description: "A CLI tool that validates, audits, and packages scholarly software releases for Zenodo/DOI publication."
+status: active    # active | dormant | archived | abandoned | experimental
+category: cli-tool         # cli-tool | library | desktop-app | webapp | service | experiment | client-work | script | config | other
+language: rust               # primary language, e.g. rust, python, typescript
+forge:                  # github | gitlab | codeberg | local-only | multiple
+visibility: private     # public | private
+tags: []                # e.g. [audio, wasm, cli, work]
+notes: ""               # context, next steps, why it exists
+created: ""             # YYYY-MM-DD, approximate is fine
+last_touched: ""        # YYYY-MM-DD
