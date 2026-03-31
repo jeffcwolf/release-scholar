@@ -1,6 +1,6 @@
 name: release-scholar
 description: "A CLI tool that validates, audits, and packages scholarly software releases for Zenodo/DOI publication."
-status: active    # active | dormant | archived | abandoned | experimental
+status: superseded    # active | dormant | archived | abandoned | experimental
 category: cli-tool         # cli-tool | library | desktop-app | webapp | service | experiment | client-work | script | config | other
 language: rust               # primary language, e.g. rust, python, typescript
 forge:                  # github | gitlab | codeberg | local-only | multiple
@@ -9,3 +9,21 @@ tags: []                # e.g. [audio, wasm, cli, work]
 notes: ""               # context, next steps, why it exists
 created: ""             # YYYY-MM-DD, approximate is fine
 last_touched: ""        # YYYY-MM-DD
+
+# ── Website publication (functionsandfolios.com) ──────────────────────────────
+# Uncomment and fill in when ready to publish this project to the website.
+# website:
+#   publish: false
+#   slug: mint
+#   order: 99
+#   category: "Desktop Applications"   # or: Research Web Platforms | Open-Source Tools
+#   audience: "Who this is for"
+#   platform: [macOS, Windows, Linux]  # any of: macOS Windows Linux Web CLI
+#   license: MIT
+#   internal_url: "/digital-projects/mint"
+#   video_url: ""                       # YouTube /embed/ URL
+#   download_url: ""
+#   screenshots: []
+#   description_long: |
+#     Multi-paragraph markdown description for the detail page.
+#     Supports headers, lists, bold, etc.
